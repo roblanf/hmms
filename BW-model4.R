@@ -64,3 +64,56 @@ for (i in 1:length(tree_files)){
   vit.acc[i]=length(which(true==v.pred))/length(true)
   post.acc[i]=length(which(true==p.pred))/length(true)
 }
+
+pred=predict_tree(paste("./tip7.spr1.sitelh.5k/",tree_files[1],sep=''))
+v.pred<- pred[[1]];p.pred<-pred[[2]];df<-pred[[3]];seq<-pred[[4]];data=pred[[5]] 
+true=c(rep("T2",5000),rep("T1",5000),rep("T2",5000),rep("T1",5000))
+
+# mix graph
+# df=data.frame(t(data.frame(c(df,data.frame(true)))))
+# df <- tibble::rownames_to_column(df, "Array")
+# df2<-df %>% 
+#   melt(id.vars = "Array") %>%
+#   mutate(variable = str_extract(variable, "[0-9]+")) %>%
+#   mutate(value = case_when(
+#     value == "a" ~ 1,
+#     value == "b" ~ 2, 
+#     TRUE ~ as.numeric(value)
+#   )) %>%
+#   mutate(variable = as.numeric(variable))
+# 
+# df2 %>% 
+#   ggplot(aes(x = Array, y = variable, group = Array, fill = value)) +
+#   geom_col() + coord_flip()
+
+
+dl = data %>% pivot_longer(cols=c(post.prob.tree.1, post.prob.tree.2), names_to = "type", values_to = "measure")
+sc=ggplot(dl, aes(x=site, y = measure, colour=type)) + geom_point() + geom_smooth(method='loess', span=0.03)
+
+
+df=data.frame(true)
+df$site <- seq.int(nrow(df))
+df$path=as.numeric(factor(true))
+
+r4=df %>% 
+  ggplot(aes(x=site,y = path,col=path)) +
+  geom_col() +coord_cartesian(ylim=c(0,1))
+
+df=data.frame(v.pred)
+df$site <- seq.int(nrow(df))
+df$path=as.numeric(factor(v.pred))
+
+r2=df %>% 
+  ggplot(aes(x=site,y = path,col=path)) +
+  geom_col() +coord_cartesian(ylim=c(0,1))
+
+
+df=data.frame(seq)
+df$site <- seq.int(nrow(df))
+df$path=as.numeric(factor(seq))
+
+r3=df %>% 
+  ggplot(aes(x=site,y = path,col=path)) +
+  geom_col() +coord_cartesian(ylim=c(0,1))
+
+ggarrange(sc,r2, r3, r4,nrow=4)
